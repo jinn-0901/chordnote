@@ -1,6 +1,6 @@
 import React from "https://esm.sh/react@18.3.1";
 import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
-import { analyzeAudio } from "./services/audio-analyzer.js";
+import { analyzeAudio } from "./services/audio-analyzer.js?v=__BUILD_VERSION__";
 
 const h = React.createElement;
 function formatTime(seconds) {
