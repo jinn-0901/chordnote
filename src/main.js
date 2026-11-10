@@ -10,27 +10,9 @@ function formatTime(seconds) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function getYouTubeId(value) {
-  try {
-    const url = new URL(value);
-    if (url.hostname.includes("youtu.be")) return url.pathname.slice(1);
-    if (url.hostname.includes("youtube.com")) {
-      if (url.pathname === "/watch") return url.searchParams.get("v");
-      const parts = url.pathname.split("/");
-      if (["embed", "shorts", "live"].includes(parts[1])) return parts[2];
-    }
-  } catch {}
-  return null;
-}
-
 function App() {
   const [file, setFile] = React.useState(null);
   const [fileUrl, setFileUrl] = React.useState("");
-  const [youtubeQuery, setYoutubeQuery] = React.useState("");
-  const [youtubeApiKey, setYoutubeApiKey] = React.useState("");
-  const [youtubeResults, setYoutubeResults] = React.useState([]);
-  const [youtubeLoading, setYoutubeLoading] = React.useState(false);
-  const [selectedVideo, setSelectedVideo] = React.useState(null);
   const [status, setStatus] = React.useState("idle");
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState(null);
@@ -43,7 +25,8 @@ function App() {
 
   function loadFile(nextFile) {
     if (!nextFile) return;
-    if (!nextFile.type.startsWith("audio/")) {
+    const audioExtensions = /\.(mp3|wav|m4a|aac|ogg|oga|flac|aiff|aif|opus|webm)$/i;
+    if (!nextFile.type.startsWith("audio/") && !audioExtensions.test(nextFile.name)) {
       setError("오디오 파일만 업로드할 수 있어요.");
       return;
     }
@@ -57,7 +40,6 @@ function App() {
     setResult(null);
     setError("");
     setStatus("idle");
-    setSelectedVideo(null);
   }
 
   async function runAnalysis() {
@@ -73,48 +55,6 @@ function App() {
     } catch (e) {
       setError(e.message || "분석 중 문제가 발생했어요.");
       setStatus("idle");
-    }
-  }
-
-  async function searchYouTube() {
-    const query = youtubeQuery.trim();
-    const key = youtubeApiKey.trim();
-    if (!query) {
-      setError("검색할 노래나 영상 제목을 입력해 주세요.");
-      return;
-    }
-    if (!key) {
-      setError("YouTube Data API 키를 먼저 입력해 주세요.");
-      return;
-    }
-    setYoutubeLoading(true);
-    setError("");
-    setYoutubeResults([]);
-    setSelectedVideo(null);
-    try {
-      const params = new URLSearchParams({
-        part: "snippet",
-        q: query,
-        type: "video",
-        videoEmbeddable: "true",
-        safeSearch: "moderate",
-        maxResults: "10",
-        key
-      });
-      const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
-      const data = await response.json();
-      if (!response.ok) {
-        const reason = data?.error?.errors?.[0]?.reason;
-        if (reason === "keyInvalid") throw new Error("API 키가 올바르지 않아요. 키를 다시 확인해 주세요.");
-        if (reason === "quotaExceeded") throw new Error("오늘 YouTube 검색 할당량을 모두 사용했어요. 내일 다시 시도해 주세요.");
-        throw new Error(data?.error?.message || "YouTube 검색에 실패했어요.");
-      }
-      setYoutubeResults((data.items || []).filter(item => item.id?.videoId));
-      if (!data.items?.length) setError("검색 결과가 없어요. 다른 검색어를 입력해 보세요.");
-    } catch (e) {
-      setError(e.message || "YouTube 검색 중 문제가 발생했어요.");
-    } finally {
-      setYoutubeLoading(false);
     }
   }
 
@@ -154,7 +94,7 @@ function App() {
           onDragLeave: () => setDragging(false),
           onDrop: e => { e.preventDefault(); setDragging(false); loadFile(e.dataTransfer.files?.[0]); }
         },
-          h("input", { ref: inputRef, type: "file", accept: "audio/*", hidden: true, onChange: e => loadFile(e.target.files?.[0]) }),
+          h("input", { ref: inputRef, type: "file", accept: "audio/*,.mp3,.wav,.m4a,.aac,.ogg,.oga,.flac,.aiff,.aif,.opus,.webm", hidden: true, onChange: e => loadFile(e.target.files?.[0]) }),
           h("div", { className: "upload-icon" }, file ? "♫" : "↑"),
           h("strong", null, file ? file.name : "오디오 파일을 여기에 놓으세요"),
           h("span", { className: "upload-caption" }, file ? "파일이 준비됐어요. 아래 버튼으로 분석할 수 있어요." : "또는"),
@@ -164,32 +104,6 @@ function App() {
           h("span", { className: "file-type" }, "AUDIO"),
           h("span", { className: "file-name" }, file.name),
           h("button", { className: "text-button", onClick: () => { setFile(null); setFileUrl(""); setResult(null); setStatus("idle"); } }, "삭제")
-        ),
-        h("div", { className: "divider-label" }, h("span"), h("i", null, "OR"), h("span")),
-        h("div", { className: "youtube-search" },
-          h("div", { className: "youtube-label" }, h("span", { className: "youtube-icon" }, "▶"), h("span", null, "YouTube에서 영상 검색")),
-          h("div", { className: "api-key-row" },
-            h("input", { className: "youtube-input", type: "password", value: youtubeApiKey, onChange: e => setYoutubeApiKey(e.target.value), placeholder: "YouTube Data API 키 입력", autoComplete: "off" }),
-            h("span", { className: "api-key-hint" }, "키는 이 브라우저에서만 사용하고 저장하지 않아요")
-          ),
-          h("div", { className: "youtube-input-wrap" },
-            h("input", { className: "youtube-input", value: youtubeQuery, onChange: e => setYoutubeQuery(e.target.value), placeholder: "노래 제목이나 아티스트 검색", onKeyDown: e => { if (e.key === "Enter") searchYouTube(); } }),
-            h("button", { className: "button button-small", onClick: searchYouTube, disabled: youtubeLoading }, youtubeLoading ? "검색 중..." : "검색")
-          )
-        ),
-        youtubeResults.length > 0 && h("div", { className: "youtube-results" },
-          h("div", { className: "search-result-count" }, `검색 결과 ${youtubeResults.length}개`),
-          youtubeResults.map(item => h("button", { key: item.id.videoId, className: "youtube-result" + (selectedVideo?.id?.videoId === item.id.videoId ? " selected" : ""), onClick: () => { setSelectedVideo(item); setFile(null); setResult(null); setStatus("idle"); } },
-            h("img", { src: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url, alt: "", loading: "lazy" }),
-            h("span", { className: "youtube-result-copy" },
-              h("strong", null, item.snippet.title),
-              h("small", null, item.snippet.channelTitle)
-            )
-          ))
-        ),
-        selectedVideo && h("div", { className: "youtube-panel" },
-          h("iframe", { src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(selectedVideo.id.videoId)}`, title: selectedVideo.snippet.title, allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowFullScreen: true }),
-          h("p", null, "YouTube 영상은 재생만 지원해요. 영상의 음원을 추출하지 않으며, 코드 분석은 권한이 있는 오디오 파일 업로드로 이용해 주세요.")
         ),
         file && h("button", { className: "button button-primary analyze-button", disabled: status === "analyzing", onClick: runAnalysis },
           status === "analyzing" ? h(React.Fragment, null, h("span", { className: "spinner" }), "코드 분석 중...") : "코드 분석하기  →"
