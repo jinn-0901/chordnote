@@ -3,8 +3,6 @@ import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
 import { analyzeAudio } from "./services/audio-analyzer.js";
 
 const h = React.createElement;
-const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
-
 function formatTime(seconds) {
   const s = Math.max(0, Math.floor(seconds));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -112,8 +110,8 @@ function App() {
       h("section", { className: "hero" },
         h("div", { className: "eyebrow" }, h("span", { className: "eyebrow-dot" }), "YOUR MUSIC, DECODED"),
         h("h1", null, "Find the ", h("span", null, "chords.")),
-        h("p", { className: "hero-copy" }, "음악 파일을 올리면 코드 진행을 자동으로 분석해요."),
-        h("p", { className: "hero-subcopy" }, "무료 · 회원가입 없음 · 브라우저에서 분석")
+        h("p", { className: "hero-copy" }, "음원을 넣고 코드 진행을 확인하세요."),
+        h("p", { className: "hero-subcopy" }, "음원 업로드 · 코드 분석")
       ),
       h("section", { className: "workspace" },
         h("div", { className: "section-heading" },
@@ -181,7 +179,7 @@ function App() {
         ),
         h("div", { className: "result-summary" },
           h("div", null, h("span", { className: "summary-label" }, "추정 조성"), h("strong", null, result.key)),
-          h("div", null, h("span", { className: "summary-label" }, "분석 방식"), h("strong", null, "Chroma + 코드 패턴 비교"))
+          
         ),
         h("div", { className: "player-card" },
           h("div", { className: "now-playing" },
