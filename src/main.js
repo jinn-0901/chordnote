@@ -182,7 +182,7 @@ function App() {
           youtubeResults.map(item => h("button", { key: item.id.videoId, className: "youtube-result" + (selectedVideo?.id?.videoId === item.id.videoId ? " selected" : ""), onClick: () => { setSelectedVideo(item); setFile(null); setResult(null); setStatus("idle"); } },
             h("img", { src: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url, alt: "", loading: "lazy" }),
             h("span", { className: "youtube-result-copy" },
-              h("strong", { dangerouslySetInnerHTML: { __html: item.snippet.title } }),
+              h("strong", null, item.snippet.title),
               h("small", null, item.snippet.channelTitle)
             )
           ))
