@@ -26,8 +26,11 @@ function getYouTubeId(value) {
 function App() {
   const [file, setFile] = React.useState(null);
   const [fileUrl, setFileUrl] = React.useState("");
-  const [youtubeUrl, setYoutubeUrl] = React.useState("");
-  const [youtubeId, setYoutubeId] = React.useState("");
+  const [youtubeQuery, setYoutubeQuery] = React.useState("");
+  const [youtubeApiKey, setYoutubeApiKey] = React.useState("");
+  const [youtubeResults, setYoutubeResults] = React.useState([]);
+  const [youtubeLoading, setYoutubeLoading] = React.useState(false);
+  const [selectedVideo, setSelectedVideo] = React.useState(null);
   const [status, setStatus] = React.useState("idle");
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState(null);
@@ -54,7 +57,7 @@ function App() {
     setResult(null);
     setError("");
     setStatus("idle");
-    setYoutubeId("");
+    setSelectedVideo(null);
   }
 
   async function runAnalysis() {
@@ -73,17 +76,46 @@ function App() {
     }
   }
 
-  function openYouTube() {
-    const id = getYouTubeId(youtubeUrl.trim());
-    if (!id) {
-      setError("올바른 YouTube 링크를 입력해 주세요.");
+  async function searchYouTube() {
+    const query = youtubeQuery.trim();
+    const key = youtubeApiKey.trim();
+    if (!query) {
+      setError("검색할 노래나 영상 제목을 입력해 주세요.");
       return;
     }
-    setYoutubeId(id);
+    if (!key) {
+      setError("YouTube Data API 키를 먼저 입력해 주세요.");
+      return;
+    }
+    setYoutubeLoading(true);
     setError("");
-    setFile(null);
-    setResult(null);
-    setStatus("idle");
+    setYoutubeResults([]);
+    setSelectedVideo(null);
+    try {
+      const params = new URLSearchParams({
+        part: "snippet",
+        q: query,
+        type: "video",
+        videoEmbeddable: "true",
+        safeSearch: "moderate",
+        maxResults: "10",
+        key
+      });
+      const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+      const data = await response.json();
+      if (!response.ok) {
+        const reason = data?.error?.errors?.[0]?.reason;
+        if (reason === "keyInvalid") throw new Error("API 키가 올바르지 않아요. 키를 다시 확인해 주세요.");
+        if (reason === "quotaExceeded") throw new Error("오늘 YouTube 검색 할당량을 모두 사용했어요. 내일 다시 시도해 주세요.");
+        throw new Error(data?.error?.message || "YouTube 검색에 실패했어요.");
+      }
+      setYoutubeResults((data.items || []).filter(item => item.id?.videoId));
+      if (!data.items?.length) setError("검색 결과가 없어요. 다른 검색어를 입력해 보세요.");
+    } catch (e) {
+      setError(e.message || "YouTube 검색 중 문제가 발생했어요.");
+    } finally {
+      setYoutubeLoading(false);
+    }
   }
 
   function jumpToChord(chord) {
@@ -134,16 +166,30 @@ function App() {
           h("button", { className: "text-button", onClick: () => { setFile(null); setFileUrl(""); setResult(null); setStatus("idle"); } }, "삭제")
         ),
         h("div", { className: "divider-label" }, h("span"), h("i", null, "OR"), h("span")),
-        h("div", { className: "youtube-row" },
-          h("div", { className: "youtube-label" }, h("span", { className: "youtube-icon" }, "▶"), h("span", null, "YouTube 링크")),
+        h("div", { className: "youtube-search" },
+          h("div", { className: "youtube-label" }, h("span", { className: "youtube-icon" }, "▶"), h("span", null, "YouTube에서 영상 검색")),
+          h("div", { className: "api-key-row" },
+            h("input", { className: "youtube-input", type: "password", value: youtubeApiKey, onChange: e => setYoutubeApiKey(e.target.value), placeholder: "YouTube Data API 키 입력", autoComplete: "off" }),
+            h("span", { className: "api-key-hint" }, "키는 이 브라우저에서만 사용하고 저장하지 않아요")
+          ),
           h("div", { className: "youtube-input-wrap" },
-            h("input", { className: "youtube-input", value: youtubeUrl, onChange: e => setYoutubeUrl(e.target.value), placeholder: "https://www.youtube.com/watch?v=...", onKeyDown: e => { if (e.key === "Enter") openYouTube(); } }),
-            h("button", { className: "button button-small", onClick: openYouTube }, "열기")
+            h("input", { className: "youtube-input", value: youtubeQuery, onChange: e => setYoutubeQuery(e.target.value), placeholder: "노래 제목이나 아티스트 검색", onKeyDown: e => { if (e.key === "Enter") searchYouTube(); } }),
+            h("button", { className: "button button-small", onClick: searchYouTube, disabled: youtubeLoading }, youtubeLoading ? "검색 중..." : "검색")
           )
         ),
-        youtubeId && h("div", { className: "youtube-panel" },
-          h("iframe", { src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtubeId)}`, title: "YouTube player", allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowFullScreen: true }),
-          h("p", null, "YouTube 영상은 여기서 재생할 수 있어요. 저작권 및 YouTube 제한으로 영상 음원을 직접 추출해 분석하지는 않아요. 분석하려면 권한이 있는 오디오 파일을 업로드해 주세요.")
+        youtubeResults.length > 0 && h("div", { className: "youtube-results" },
+          h("div", { className: "search-result-count" }, `검색 결과 ${youtubeResults.length}개`),
+          youtubeResults.map(item => h("button", { key: item.id.videoId, className: "youtube-result" + (selectedVideo?.id?.videoId === item.id.videoId ? " selected" : ""), onClick: () => { setSelectedVideo(item); setFile(null); setResult(null); setStatus("idle"); } },
+            h("img", { src: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url, alt: "", loading: "lazy" }),
+            h("span", { className: "youtube-result-copy" },
+              h("strong", { dangerouslySetInnerHTML: { __html: item.snippet.title } }),
+              h("small", null, item.snippet.channelTitle)
+            )
+          ))
+        ),
+        selectedVideo && h("div", { className: "youtube-panel" },
+          h("iframe", { src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(selectedVideo.id.videoId)}`, title: selectedVideo.snippet.title, allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowFullScreen: true }),
+          h("p", null, "YouTube 영상은 재생만 지원해요. 영상의 음원을 추출하지 않으며, 코드 분석은 권한이 있는 오디오 파일 업로드로 이용해 주세요.")
         ),
         file && h("button", { className: "button button-primary analyze-button", disabled: status === "analyzing", onClick: runAnalysis },
           status === "analyzing" ? h(React.Fragment, null, h("span", { className: "spinner" }), "코드 분석 중...") : "코드 분석하기  →"
