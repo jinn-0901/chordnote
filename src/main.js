@@ -18,6 +18,9 @@ function App() {
   const [result, setResult] = React.useState(null);
   const [selectedChord, setSelectedChord] = React.useState(-1);
   const [dragging, setDragging] = React.useState(false);
+  const [youtubeInput, setYoutubeInput] = React.useState("");
+  const [youtubeId, setYoutubeId] = React.useState("");
+  const [youtubeError, setYoutubeError] = React.useState("");
   const inputRef = React.useRef(null);
   const audioRef = React.useRef(null);
 
@@ -40,6 +43,33 @@ function App() {
     setResult(null);
     setError("");
     setStatus("idle");
+  }
+
+  function getYouTubeId(value) {
+    try {
+      const url = new URL(value.trim());
+      const host = url.hostname.replace(/^www\\./, "").toLowerCase();
+      let id = "";
+      if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] || "";
+      else if (["youtube.com", "m.youtube.com", "music.youtube.com", "youtube-nocookie.com"].includes(host)) {
+        if (url.pathname === "/watch") id = url.searchParams.get("v") || "";
+        else if (/^\\/(embed|shorts|live)\\//.test(url.pathname)) id = url.pathname.split("/")[2] || "";
+      }
+      return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function loadYouTubeLink() {
+    const id = getYouTubeId(youtubeInput);
+    if (!id) {
+      setYoutubeError("올바른 유튜브 영상 링크를 입력해 주세요.");
+      setYoutubeId("");
+      return;
+    }
+    setYoutubeId(id);
+    setYoutubeError("");
   }
 
   async function runAnalysis() {
@@ -104,6 +134,37 @@ function App() {
           h("span", { className: "file-type" }, "AUDIO"),
           h("span", { className: "file-name" }, file.name),
           h("button", { className: "text-button", onClick: () => { setFile(null); setFileUrl(""); setResult(null); setStatus("idle"); } }, "삭제")
+        ),
+        h("div", { className: "divider-label" }, h("span"), h("i", null, "OR"), h("span")),
+        h("div", { className: "youtube-panel" },
+          h("div", { className: "youtube-heading" },
+            h("strong", null, "유튜브 링크로 재생"),
+            h("span", null, "영상 링크를 붙여넣으세요")
+          ),
+          h("div", { className: "youtube-form" },
+            h("input", {
+              className: "youtube-input",
+              type: "url",
+              value: youtubeInput,
+              placeholder: "https://www.youtube.com/watch?v=...",
+              onChange: e => setYoutubeInput(e.target.value),
+              onKeyDown: e => { if (e.key === "Enter") loadYouTubeLink(); },
+              "aria-label": "유튜브 영상 링크"
+            }),
+            h("button", { className: "button button-secondary", onClick: loadYouTubeLink }, "불러오기")
+          ),
+          youtubeError && h("p", { className: "error-message" }, youtubeError),
+          youtubeId && h("div", { className: "youtube-player" },
+            h("iframe", {
+              src: "https://www.youtube-nocookie.com/embed/" + youtubeId,
+              title: "YouTube video player",
+              allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+              referrerPolicy: "strict-origin-when-cross-origin",
+              allowFullScreen: true
+            }),
+            h("button", { className: "text-button youtube-clear", onClick: () => setYoutubeId("") }, "영상 닫기")
+          ),
+          h("p", { className: "youtube-note" }, "일부 영상은 업로더 설정이나 저작권 제한으로 외부 사이트에서 재생되지 않을 수 있어요. 유튜브 링크는 재생용이며 코드 분석은 오디오 파일 업로드가 필요해요.")
         ),
         file && h("button", { className: "button button-primary analyze-button", disabled: status === "analyzing", onClick: runAnalysis },
           status === "analyzing" ? h(React.Fragment, null, h("span", { className: "spinner" }), "코드 분석 중...") : "코드 분석하기  →"
