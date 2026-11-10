@@ -48,12 +48,14 @@ function App() {
   function getYouTubeId(value) {
     try {
       const url = new URL(value.trim());
-      const host = url.hostname.replace(/^www\\./, "").toLowerCase();
+      const host = url.hostname.toLowerCase();
+      const normalizedHost = host.startsWith("www.") ? host.slice(4) : host;
+      const parts = url.pathname.split("/").filter(Boolean);
       let id = "";
-      if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] || "";
-      else if (["youtube.com", "m.youtube.com", "music.youtube.com", "youtube-nocookie.com"].includes(host)) {
+      if (normalizedHost === "youtu.be") id = parts[0] || "";
+      else if (["youtube.com", "m.youtube.com", "music.youtube.com", "youtube-nocookie.com"].includes(normalizedHost)) {
         if (url.pathname === "/watch") id = url.searchParams.get("v") || "";
-        else if (/^\\/(embed|shorts|live)\\//.test(url.pathname)) id = url.pathname.split("/")[2] || "";
+        else if (["embed", "shorts", "live"].includes(parts[0])) id = parts[1] || "";
       }
       return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : "";
     } catch {
