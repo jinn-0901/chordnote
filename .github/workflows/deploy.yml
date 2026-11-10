@@ -27,6 +27,9 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Add build version to static assets
+        run: |
+          sed -i "s/__BUILD_VERSION__/${GITHUB_SHA}/g" index.html src/main.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
