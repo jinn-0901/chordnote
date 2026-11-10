@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+:root{font-family:Manrope,'Noto Sans KR',sans-serif;color:#f2f1ee;background:#101114;font-synthesis:none;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px;background:radial-gradient(ellipse at 50% 0%,#202127 0%,#101114 50%);min-height:100vh}
+button,input{font:inherit}
+button{cursor:pointer}
+.app-shell{max-width:1080px;margin:0 auto;padding:0 34px}
+.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2a2b30}
+.brand{display:flex;align-items:center;gap:10px;color:#f4f2ed;text-decoration:none;font-size:20px;font-weight:800;letter-spacing:-.8px}
+.brand-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#c8f169;color:#171914;font-size:21px}
+.top-note,.eyebrow,.step-label,.format-note,.summary-label,.result-meta{font-family:'DM Mono',monospace;letter-spacing:1px}
+.top-note{font-size:10px;color:#777982}
+.main-content{max-width:760px;margin:0 auto}
+.hero{text-align:center;padding:82px 0 48px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:#c8f169;font-size:10px}
+.eyebrow-dot{width:6px;height:6px;background:#c8f169;border-radius:50%;box-shadow:0 0 12px #c8f169}
+h1{font-size:clamp(48px,8vw,76px);letter-spacing:-5px;line-height:1.05;margin:20px 0 15px;font-weight:800}
+h1 span{color:#c8f169}
+.hero-copy{font-size:16px;color:#d3d1cb;margin:0}
+.hero-subcopy{font-size:12px;color:#777982;margin:12px 0 0}
+.workspace,.results-section{border:1px solid #303137;background:rgba(24,25,30,.8);border-radius:18px;padding:26px}
+.section-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.step-label{font-size:9px;color:#c8f169}
+h2{font-size:19px;letter-spacing:-.5px;margin:5px 0 0}
+.format-note,.result-meta{font-size:9px;color:#7e8189}
+.upload-zone{min-height:194px;border:1px dashed #494b53;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:#1b1c21;transition:.2s}
+.upload-zone.is-dragging{border-color:#c8f169;background:#252a1d}
+.upload-zone.has-file{border-style:solid;border-color:#596344}
+.upload-icon{width:42px;height:42px;border-radius:13px;background:#2b3023;color:#c8f169;display:grid;place-items:center;font-size:24px}
+.upload-zone strong{font-size:14px;font-weight:600}
+.upload-caption{font-size:11px;color:#858791}
+.button{border:0;border-radius:8px;font-size:12px;font-weight:700;padding:10px 16px;transition:.2s}
+.button-secondary{background:#303139;color:#f1f0ec}
+.button-secondary:hover{background:#3d3f48}
+.button-primary{background:#c8f169;color:#171914}
+.button-primary:hover{background:#d7ff7d}
+.button:disabled{opacity:.65;cursor:wait}
+.file-strip{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:8px;background:#222329}
+.file-type{font:9px 'DM Mono',monospace;color:#c8f169;border:1px solid #58613f;border-radius:4px;padding:4px 5px}
+.file-name{font-size:11px;color:#d9d8d2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.text-button{border:0;background:none;color:#92949c;font-size:11px}
+.divider-label{display:flex;align-items:center;gap:14px;margin:22px 0;color:#676a73}
+.divider-label span{height:1px;background:#303137;flex:1}
+.divider-label i{font:normal 9px 'DM Mono',monospace}
+.youtube-row{display:flex;align-items:center;gap:14px}
+.youtube-label{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:12px;color:#c9c8c2}
+.youtube-icon{font-size:13px;color:#ff6464}
+.youtube-input-wrap{display:flex;gap:8px;flex:1}
+.youtube-input{width:100%;min-width:0;border:1px solid #363840;background:#15161a;border-radius:8px;padding:10px 12px;color:#eee;font-size:11px;outline:none}
+.youtube-input:focus{border-color:#7c914f}
+.button-small{background:#34363d;color:#f3f2ed;padding:9px 13px}
+.youtube-panel{margin-top:16px;padding:12px;background:#15161a;border-radius:10px}
+.youtube-panel iframe{display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:7px}
+.youtube-panel p{font-size:11px;line-height:1.7;color:#999ca4;margin:10px 2px 2px}
+.analyze-button{width:100%;margin-top:18px;padding:14px;font-size:13px}
+.error-message{color:#ff8585;font-size:12px;margin:13px 0 0}
+.processing-note{text-align:center;color:#9da18f;font-size:11px;margin:12px 0 0}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #73834b;border-top-color:#20251a;border-radius:50%;vertical-align:-2px;margin-right:7px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.results-section{margin-top:22px}
+.result-summary{display:flex;gap:12px;margin-bottom:14px}
+.result-summary>div{flex:1;background:#222329;border-radius:9px;padding:13px 15px;display:flex;flex-direction:column;gap:6px}
+.summary-label{font-size:9px;color:#858891}
+.result-summary strong{font-size:18px;color:#c8f169}
+.player-card{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#15161a;border:1px solid #303137;border-radius:10px;padding:14px}
+.now-playing{display:flex;flex-direction:column;gap:5px}
+.now-playing strong{font-size:21px}
+audio{width:min(65%,360px);height:36px}
+.chord-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chord-chip{min-width:76px;border:1px solid #3b3d44;background:#222329;border-radius:8px;color:#f0efe9;padding:10px 11px;display:flex;flex-direction:column;gap:5px;text-align:left}
+.chord-chip strong{font-size:15px}
+.chord-chip span{font:9px 'DM Mono',monospace;color:#858891}
+.chord-chip.active{border-color:#c8f169;background:#2a3021}
+.chord-chip.active strong{color:#c8f169}
+.disclaimer{font-size:10px;line-height:1.6;color:#858891;margin:15px 0 0}
+.footer{display:flex;justify-content:space-between;max-width:760px;margin:38px auto 0;padding:20px 0 28px;border-top:1px solid #2a2b30;color:#777982;font-size:10px}
+.footer span:first-child{font-weight:800;color:#c5c4bd}
+@media(max-width:600px){.app-shell{padding:0 16px}.topbar{height:64px}.top-note{font-size:8px}.hero{padding:60px 0 35px}h1{letter-spacing:-3px}.workspace,.results-section{padding:18px}.section-heading{align-items:flex-start}.format-note{font-size:8px;margin-top:4px}.youtube-row{align-items:flex-start;flex-direction:column;gap:9px}.youtube-input-wrap{width:100%}.player-card{align-items:flex-start;flex-direction:column}audio{width:100%}.footer{margin-top:28px}}
